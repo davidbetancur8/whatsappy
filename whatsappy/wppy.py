@@ -26,6 +26,7 @@ def parse_file(tipo, text_file):
     df = pd.DataFrame(info, columns=["date", "name", "message"])
     df.name = df.name.str.strip()
     df.date = df.date.str.strip()
+
     if tipo == 1:
         df['date'] =  pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S')
     if tipo == 2:
