@@ -2,3 +2,5 @@ pandas==0.24.2
 numpy==1.16.2
 matplotlib==3.0.3
 jupyter
+wordcloud==1.6.0
+stop-words==2018.7.23
