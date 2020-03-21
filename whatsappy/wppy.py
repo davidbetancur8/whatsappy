@@ -22,6 +22,7 @@ def parse_file(tipo, text_file):
                     date = re.search("\d+/\d+/\d+ \d+:\d+", line).group(0)
                     name = re.search("(?<=\d\d - )([^:]*)(?=: )", line).group(0)
                     message = re.search("(?<=: )(.*)($)", line).group(0)
+                
                 info.append([date, name, message])
             except Exception as e:
                 pass
