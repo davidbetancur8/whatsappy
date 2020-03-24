@@ -5,37 +5,32 @@ import collections
 from stop_words import get_stop_words
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import seaborn as sns
 plt.style.use("fivethirtyeight")
 
 
-def parse_file(tipo, text_file):
+def parse_file(text_file):
     info = []
     with open(text_file, encoding="utf8") as f:
-        for line in f.readlines():
-            try:
-                if tipo == 1:
-                    date = re.search("\[\d+/\d+/\d+, \d+:\d+:\d+\]", line).group(0)
-                    date = date[1:-1]
-                    name = re.search("(?<=\d\d\] )([^:]*)(?=: )", line).group(0)
-                    message = re.search("(?<=: )(.*)($)", line).group(0)
-                if tipo == 2:
-                    date = re.search("\d+/\d+/\d+ \d+:\d+", line).group(0)
-                    name = re.search("(?<=\d\d - )([^:]*)(?=: )", line).group(0)
-                    message = re.search("(?<=: )(.*)($)", line).group(0)
-                
-                info.append([date, name, message])
-            except Exception as e:
-                pass
+            for line in f.readlines():
+                try:
+                    if ":" in line.split("-")[1]:
+                        date = line.split("-")[0]
+                        name = line.split("-")[1].split(":")[0]
+                        message = line.split("-")[1].split(":")[1]
+                    else:
+                        pass
+                    info.append([date, name, message])
+                except Exception as e:
+                    print(line)
+                    print(e)
 
     df = pd.DataFrame(info, columns=["date", "name", "message"])
     df.name = df.name.str.strip()
     df.date = df.date.str.strip()
-
-    if tipo == 1:
-        df['date'] =  pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S')
-    if tipo == 2:
-        df['date'] =  pd.to_datetime(df['date'], format='%d/%m/%y %H:%M')
+    df['date'] =  pd.to_datetime(df['date'], errors="coerce")
     return df
+
 
 def plot_word(df, palabra, max_count):
     df_word = df.copy()
@@ -50,6 +45,11 @@ def plot_count(df):
     df_count.head(10).plot.bar(figsize=(5, 5))
     plt.show()
 
+def plot_hours(df):
+    by_dates_df = df.groupby([df.date.dt.hour])["name"].count()
+    sns.barplot(by_dates_df.index, by_dates_df.values)
+    plt.show()
+    return by_dates_df
 
 def agrupar(x):
     todo = []
@@ -61,8 +61,10 @@ def agrupar(x):
 
 def general_cloud(df):
     all_text = df.groupby([True]*len(df)).message.apply(agrupar).values[0]
+    all_text = all_text.replace("jajaja", "")
+    all_text = all_text.replace("jaja", "")
     stopwords = get_stop_words('es')
-    lista_propia = ["<multimedia", "omitido>"]
+    lista_propia = ["<multimedia", "omitido>", "https", "ja"]
     for palabra in lista_propia:
         stopwords.append(palabra)
     wordcount = collections.defaultdict(int)
@@ -70,8 +72,9 @@ def general_cloud(df):
         if word not in stopwords:
             wordcount[word] += 1
     
-    wc = WordCloud(background_color="white",width=1000, height=1500).generate_from_frequencies(wordcount)
+    wc = WordCloud(background_color="black",width=1000, height=1500).generate_from_frequencies(wordcount)
     fig = plt.figure(figsize=(15,15))
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
     plt.show()
+    return wordcount

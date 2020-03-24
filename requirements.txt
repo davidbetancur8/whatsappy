@@ -4,3 +4,5 @@ matplotlib==3.0.3
 jupyter
 wordcloud==1.6.0
 stop-words==2018.7.23
+seaborn==0.10.0
+
